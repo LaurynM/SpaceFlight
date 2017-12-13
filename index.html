@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+  <head>
+    <meta charset="UTF-8">
+
+    <title>C'mon, Ride a Space-Train!</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <!-- firebase -->
+    <script src="https://www.gstatic.com/firebasejs/4.8.0/firebase.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+
+      <br>
+
+      <!-- Jumbotron -->
+      <div class="jumbotron">
+        <h1 class="text-center">Travel to Tomorrow, Today!</h1>
+      </div><!--close jumbotron-->
+
+      <div class="row">
+
+        <!-- Display All Flights -->
+        <div class="col-lg-12">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Current SpaceFlights</h3>
+            </div> <!--close panel heading-->
+            <div class="panel-body">
+                <div id="allFlights">
+        <table class="table">
+		  <thead>
+		      <tr>
+		          <th scope="col">Spacecraft Name</th>
+				  <th scope="col">Destination</th>
+				  <th scope="col">Frequency (min)</th>
+				  <th scope="col">Next Arrival (HH:mm - Earth Military Time)</th>
+				  <th scope="col">Minutes Away (min)</th>
+			  </tr>
+		  </thead>
+		  <tbody><!--SpaceFlights go here--></tbody>
+		</table>
+                </div>
+            </div><!--close panel body-->
+          </div><!--close panel -->
+        </div><!--close column-->
+
+
+
+        <!-- Sign-Up Panel-->
+        <div class="col-lg-6">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Schedule a New SpaceFlight</h3>
+            </div><!--close panel heading-->
+
+            <div class="panel-body">
+              <!-- Sign-up Form (note the various input "types")-->
+              <form role="form">
+                <div class="form-group">
+                  <label for="name-input">Spacecraft Name:</label>
+                  <input class="form-control" id="name-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="destination-input">Destination:</label>
+                  <input class="form-control" id="destination-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="start-input">First Flight Time (HH:mm - Earth Military Time):</label>
+                  <input class="form-control" id="start-input" type="text">
+                </div>
+                <div class="form-group">
+                  <label for="frequency-input">Flight Frequency (min):</label>
+                  <input class="form-control" id="frequency-input" type="text">
+                </div>
+                <button class="btn btn-default" id="add-flight" type="submit">Submit</button>
+              </form>
+            </div><!--close panel body-->
+          </div><!--close panel-->
+
+        </div><!--close column-->
+      </div><!--close row-->
+
+    </div><!--close container-->
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <!--moment.js-->
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.19.4/min/moment.min.js"></script>
+
+    <!-- Script -->
+    <script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyCAUw6ymGJRUfk_iguiqM1mhFfUtjIFAoM",
+    authDomain: "spaceflight-deaaf.firebaseapp.com",
+    databaseURL: "https://spaceflight-deaaf.firebaseio.com",
+    projectId: "spaceflight-deaaf",
+    storageBucket: "spaceflight-deaaf.appspot.com",
+    messagingSenderId: "807613957279"
+  };
+
+  firebase.initializeApp(config);
+
+    var db = firebase.database();
+
+    // Declare Variables
+    var name = "";
+    var destination = "";
+    var start = "";
+    var frequency = 0;
+
+    // On Button Click
+    $("#add-flight").on("click", function(event) {
+      event.preventDefault();
+      name = $("#name-input").val().trim();
+      destination = $("#destination-input").val().trim();
+      start = $("#start-input").val().trim();
+      frequency = $("#frequency-input").val().trim();
+
+      // Push to Firebase
+      db.ref().push({
+
+        name: name,
+        destination: destination,
+        start: start,
+        frequency: frequency,
+        dateAdded: firebase.database.ServerValue.TIMESTAMP
+      });
+    });
+
+    // watcher
+    db.ref().on("child_added", function(childSnapshot) {
+        //ensure the start time is after the current time
+        var startConverted = moment(childSnapshot.val().start, "HH:mm").subtract(1, "years"); 
+        // Difference between now and the start time
+        var waitTime = moment().diff(moment(startConverted), "minutes");
+        // Time difference (remainder)
+        var remainder = waitTime % childSnapshot.val().frequency;
+        // Minutes Until Train
+        var away = childSnapshot.val().frequency - remainder;
+        // Next Train
+        var nextArrive = moment().add(away, "minutes");
+
+        $("tbody").append(`
+		 		<tr>
+		 		<td>${childSnapshot.val().name}</td>
+		 		<td>${childSnapshot.val().destination}</td>
+		 		<td>${childSnapshot.val().frequency}</td>
+		 		<td>${moment(nextArrive).format("HH:mm")}</td>
+		 		<td>${away}</td>
+		 		</tr>`);
+    }, function(errorObject) { // Handle the errors
+      console.log("Errors handled: " + errorObject.code);
+    });
+
+    </script>
+
+  </body>
+
+</html>
+
