@@ -1,0 +1,17 @@
+body {
+    background: url(galaxy.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+.jumbotron {
+    background-color: #E5E5E5;
+    color: #FCA311;
+}
+.panel-heading{
+    background-color: #14213D;
+    color: #FCA311;
+}
+.panel {
+    background-color: #E5E5E5;
+    color: #0B032D;
+}
